@@ -103,6 +103,31 @@ npm run build
 npm run preview
 ```
 
+### Deploying to GitHub Pages
+
+The app is configured to automatically deploy to GitHub Pages. To enable deployment:
+
+1. **Enable GitHub Pages** in your repository settings:
+   - Go to Settings → Pages
+   - Under "Build and deployment", select "GitHub Actions" as the source
+
+2. **Push to main branch** - The GitHub Actions workflow will automatically:
+   - Build the application
+   - Deploy to GitHub Pages
+   - Make it available at `https://alsub25.github.io/Football-Sim/`
+
+3. **Manual deployment** (if needed):
+   ```bash
+   npm run deploy
+   ```
+
+The app is pre-configured with:
+- Correct base path for GitHub Pages (`/Football-Sim/`)
+- Automated deployment workflow (`.github/workflows/deploy.yml`)
+- Optimized production build
+
+**Note**: After the first deployment, it may take a few minutes for the site to become available.
+
 ## How to Play
 
 ### Starting Your Career
