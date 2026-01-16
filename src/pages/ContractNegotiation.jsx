@@ -50,16 +50,19 @@ export default function ContractNegotiation() {
     const marketValue = calculateMarketValue(selectedPlayer);
     const offerRatio = offerSalary / marketValue;
     
-    // Simple acceptance logic
+    // Simple acceptance logic - using deterministic approach
     let accepted = false;
+    const playerIdHash = selectedPlayer.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const randomSeed = (playerIdHash + offerSalary + offerYears) % 100;
+    
     if (offerRatio >= 1.1) {
       accepted = true; // Happy to accept
     } else if (offerRatio >= 0.9) {
-      accepted = Math.random() > 0.3; // 70% chance
+      accepted = randomSeed > 30; // 70% chance
     } else if (offerRatio >= 0.75) {
-      accepted = Math.random() > 0.6; // 40% chance
+      accepted = randomSeed > 60; // 40% chance
     } else {
-      accepted = Math.random() > 0.9; // 10% chance
+      accepted = randomSeed > 90; // 10% chance
     }
 
     if (accepted) {

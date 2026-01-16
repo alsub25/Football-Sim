@@ -7,7 +7,7 @@ import { progressPlayer, shouldRetire } from '../data/progression';
 import { generateAllCoachingStaffs, progressCoach } from '../data/coaches';
 import { determinePlayoffSeeding, generatePlayoffBracket } from '../data/playoffs';
 import { simulateGameDetailed } from '../data/gameSimulation';
-import { createSeasonHistory, addSeasonToHistory, createPlayerSeasonStats } from '../data/seasonHistory';
+import { createSeasonHistory, addSeasonToHistory } from '../data/seasonHistory';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const GameContext = createContext();
