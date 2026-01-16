@@ -13,6 +13,8 @@ import Injuries from './pages/Injuries';
 import Coaching from './pages/Coaching';
 import Playoffs from './pages/Playoffs';
 import History from './pages/History';
+import Trades from './pages/Trades';
+import Statistics from './pages/Statistics';
 
 function GameContent() {
   const { gameState, initializeGame, resetGame } = useGame();
@@ -31,7 +33,9 @@ function GameContent() {
     { id: 'depth', label: 'Depth Chart', icon: '📊', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
     { id: 'standings', label: 'Standings', icon: '🏆', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
     { id: 'injuries', label: 'Injuries', icon: '🏥', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
+    { id: 'statistics', label: 'Stats', icon: '📈', show: true },
     { id: 'coaching', label: 'Coaches', icon: '👔', show: true },
+    { id: 'trades', label: 'Trades', icon: '🔄', show: seasonPhase === 'regular' || seasonPhase === 'freeAgency' },
     { id: 'draft', label: 'Draft', icon: '🎯', show: seasonPhase === 'draft' },
     { id: 'freeagency', label: 'Free Agency', icon: '✍️', show: seasonPhase === 'freeAgency' },
     { id: 'playoffs', label: 'Playoffs', icon: '🏈', show: seasonPhase === 'playoffs' },
@@ -78,7 +82,9 @@ function GameContent() {
         {currentPage === 'depth' && <DepthChart />}
         {currentPage === 'standings' && <Standings />}
         {currentPage === 'injuries' && <Injuries />}
+        {currentPage === 'statistics' && <Statistics />}
         {currentPage === 'coaching' && <Coaching />}
+        {currentPage === 'trades' && <Trades />}
         {currentPage === 'draft' && <Draft />}
         {currentPage === 'freeagency' && <FreeAgency />}
         {currentPage === 'playoffs' && <Playoffs />}
