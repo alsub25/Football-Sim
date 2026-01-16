@@ -76,7 +76,7 @@ const teams = [
         defense: 80,
         midfield: 82,
         overall: 82,
-        players: ['Son', 'Kane', 'Maddison', 'Romero']
+        players: ['Son', 'Richarlison', 'Maddison', 'Romero']
     },
     {
         name: 'Barcelona',
@@ -484,11 +484,19 @@ function simulateNextMatch() {
         return;
     }
     
-    // Get two random teams
+    // Get two random teams with a maximum of 10 attempts to find different teams
     const team1Index = Math.floor(Math.random() * gameState.season.teams.length);
-    let team2Index = Math.floor(Math.random() * gameState.season.teams.length);
-    while (team2Index === team1Index) {
+    let team2Index;
+    let attempts = 0;
+    
+    do {
         team2Index = Math.floor(Math.random() * gameState.season.teams.length);
+        attempts++;
+    } while (team2Index === team1Index && attempts < 10);
+    
+    // Fallback: if somehow we couldn't find a different team, pick the next one
+    if (team2Index === team1Index) {
+        team2Index = (team1Index + 1) % gameState.season.teams.length;
     }
     
     const team1 = gameState.season.teams[team1Index];
