@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useGame } from '../hooks/useGame';
 import { POSITIONS } from '../data/players';
+import PlayerDetailModal from '../components/PlayerDetailModal';
 
 export default function RosterManagement() {
   const { gameState, releasePlayer } = useGame();
   const [positionFilter, setPositionFilter] = useState('all');
   const [sortBy, setSortBy] = useState('overall');
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
   
   const roster = gameState.rosters[gameState.userTeamId] || [];
   
@@ -49,6 +51,14 @@ export default function RosterManagement() {
 
   return (
     <div className="container">
+      {selectedPlayer && (
+        <PlayerDetailModal
+          player={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+          onRelease={handleRelease}
+        />
+      )}
+      
       <div className="flex-between mb-2">
         <h1>Roster Management</h1>
         <div className="text-right">
@@ -141,7 +151,11 @@ export default function RosterManagement() {
             </thead>
             <tbody>
               {sortedRoster.map(player => (
-                <tr key={player.id}>
+                <tr 
+                  key={player.id}
+                  onClick={() => setSelectedPlayer(player)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <td>
                     <div style={{ fontWeight: '600' }}>{player.fullName}</div>
                   </td>
@@ -162,7 +176,10 @@ export default function RosterManagement() {
                   <td>
                     <button 
                       className="btn-danger btn-small"
-                      onClick={() => handleRelease(player.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRelease(player.id);
+                      }}
                     >
                       Release
                     </button>
