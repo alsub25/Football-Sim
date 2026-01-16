@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Football Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen active">
+            <div class="header">
+                <h1>⚽ Football Simulator</h1>
+                <p class="subtitle">Experience the thrill of football management</p>
+            </div>
+            
+            <div class="menu-container">
+                <button class="menu-btn" onclick="showScreen('team-select-screen')">
+                    <span class="icon">🏆</span>
+                    <span>Quick Match</span>
+                </button>
+                <button class="menu-btn" onclick="showScreen('season-screen')">
+                    <span class="icon">📅</span>
+                    <span>Season Mode</span>
+                </button>
+                <button class="menu-btn" onclick="showScreen('stats-screen')">
+                    <span class="icon">📊</span>
+                    <span>Statistics</span>
+                </button>
+                <button class="menu-btn" onclick="showScreen('settings-screen')">
+                    <span class="icon">⚙️</span>
+                    <span>Settings</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Team Selection Screen -->
+        <div id="team-select-screen" class="screen">
+            <div class="header">
+                <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+                <h2>Select Teams</h2>
+            </div>
+            
+            <div class="team-selection">
+                <div class="team-selector">
+                    <h3>Home Team</h3>
+                    <select id="home-team" class="team-select">
+                        <option value="0">Manchester United</option>
+                        <option value="1">Liverpool</option>
+                        <option value="2">Chelsea</option>
+                        <option value="3">Arsenal</option>
+                        <option value="4">Manchester City</option>
+                        <option value="5">Tottenham</option>
+                        <option value="6">Barcelona</option>
+                        <option value="7">Real Madrid</option>
+                    </select>
+                    <div id="home-team-info" class="team-info"></div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="team-selector">
+                    <h3>Away Team</h3>
+                    <select id="away-team" class="team-select">
+                        <option value="0">Manchester United</option>
+                        <option value="1" selected>Liverpool</option>
+                        <option value="2">Chelsea</option>
+                        <option value="3">Arsenal</option>
+                        <option value="4">Manchester City</option>
+                        <option value="5">Tottenham</option>
+                        <option value="6">Barcelona</option>
+                        <option value="7">Real Madrid</option>
+                    </select>
+                    <div id="away-team-info" class="team-info"></div>
+                </div>
+            </div>
+            
+            <button class="start-match-btn" onclick="startMatch()">Start Match</button>
+        </div>
+
+        <!-- Match Screen -->
+        <div id="match-screen" class="screen">
+            <div class="header">
+                <button class="back-btn" onclick="showScreen('home-screen')">← Home</button>
+                <h2>Match in Progress</h2>
+            </div>
+            
+            <div class="match-container">
+                <div class="scoreboard">
+                    <div class="team-score">
+                        <div class="team-name" id="match-home-name">Team 1</div>
+                        <div class="score" id="home-score">0</div>
+                    </div>
+                    <div class="match-time">
+                        <div class="minute" id="match-minute">0'</div>
+                        <div class="period" id="match-period">1st Half</div>
+                    </div>
+                    <div class="team-score">
+                        <div class="team-name" id="match-away-name">Team 2</div>
+                        <div class="score" id="away-score">0</div>
+                    </div>
+                </div>
+                
+                <div class="match-pitch">
+                    <div class="pitch-lines">
+                        <div class="center-circle"></div>
+                        <div class="center-line"></div>
+                    </div>
+                    <div class="ball" id="ball"></div>
+                </div>
+                
+                <div class="match-events" id="match-events">
+                    <div class="event-item">
+                        <span class="event-time">0'</span>
+                        <span class="event-text">⚽ Match Started!</span>
+                    </div>
+                </div>
+                
+                <div class="match-controls">
+                    <button class="control-btn" id="play-pause-btn" onclick="toggleMatch()">
+                        <span id="play-pause-icon">▶️</span> Play
+                    </button>
+                    <button class="control-btn" onclick="speedUpMatch()">⏩ Speed Up</button>
+                    <button class="control-btn" onclick="showMatchStats()">📊 Stats</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Result Screen -->
+        <div id="result-screen" class="screen">
+            <div class="header">
+                <h2>Full Time</h2>
+            </div>
+            
+            <div class="result-container">
+                <div class="final-score">
+                    <div class="result-team">
+                        <div class="result-team-name" id="result-home-name">Team 1</div>
+                        <div class="result-score" id="result-home-score">0</div>
+                    </div>
+                    <div class="result-vs">-</div>
+                    <div class="result-team">
+                        <div class="result-score" id="result-away-score">0</div>
+                        <div class="result-team-name" id="result-away-name">Team 2</div>
+                    </div>
+                </div>
+                
+                <div class="result-verdict" id="result-verdict">Draw!</div>
+                
+                <div class="match-statistics" id="match-statistics">
+                    <h3>Match Statistics</h3>
+                    <div class="stat-row">
+                        <span class="stat-value" id="stat-home-possession">50%</span>
+                        <span class="stat-label">Possession</span>
+                        <span class="stat-value" id="stat-away-possession">50%</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-value" id="stat-home-shots">0</span>
+                        <span class="stat-label">Shots</span>
+                        <span class="stat-value" id="stat-away-shots">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-value" id="stat-home-shots-on-target">0</span>
+                        <span class="stat-label">Shots on Target</span>
+                        <span class="stat-value" id="stat-away-shots-on-target">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-value" id="stat-home-fouls">0</span>
+                        <span class="stat-label">Fouls</span>
+                        <span class="stat-value" id="stat-away-fouls">0</span>
+                    </div>
+                </div>
+                
+                <div class="result-actions">
+                    <button class="action-btn" onclick="showScreen('team-select-screen')">New Match</button>
+                    <button class="action-btn" onclick="showScreen('home-screen')">Home</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Season Mode Screen -->
+        <div id="season-screen" class="screen">
+            <div class="header">
+                <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+                <h2>Season Mode</h2>
+            </div>
+            
+            <div class="season-container">
+                <div class="season-info">
+                    <h3>League Table</h3>
+                    <table class="league-table" id="league-table">
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>Team</th>
+                                <th>P</th>
+                                <th>W</th>
+                                <th>D</th>
+                                <th>L</th>
+                                <th>Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="league-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button class="action-btn" onclick="initSeason()">Start New Season</button>
+                <button class="action-btn" onclick="simulateNextMatch()">Simulate Next Match</button>
+            </div>
+        </div>
+
+        <!-- Statistics Screen -->
+        <div id="stats-screen" class="screen">
+            <div class="header">
+                <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+                <h2>Statistics</h2>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-card-title">Matches Played</div>
+                    <div class="stat-card-value" id="total-matches">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">Total Goals</div>
+                    <div class="stat-card-value" id="total-goals">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">Wins</div>
+                    <div class="stat-card-value" id="total-wins">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">Draws</div>
+                    <div class="stat-card-value" id="total-draws">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="screen">
+            <div class="header">
+                <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+                <h2>Settings</h2>
+            </div>
+            
+            <div class="settings-container">
+                <div class="setting-item">
+                    <label for="match-speed">Match Speed</label>
+                    <select id="match-speed" class="setting-select">
+                        <option value="1000">Slow</option>
+                        <option value="500" selected>Normal</option>
+                        <option value="250">Fast</option>
+                        <option value="100">Very Fast</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="difficulty">Difficulty</label>
+                    <select id="difficulty" class="setting-select">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="sound-toggle">Sound Effects</label>
+                    <input type="checkbox" id="sound-toggle" class="setting-toggle" checked>
+                </div>
+                
+                <button class="action-btn" onclick="resetStats()">Reset All Statistics</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
