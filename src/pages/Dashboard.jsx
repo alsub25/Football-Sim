@@ -1,8 +1,8 @@
 import React from 'react';
-import { useGame } from '../contexts/GameContext';
+import { useGame } from '../hooks/useGame';
 import { getTeamById } from '../data/teams';
 
-export default function Dashboard({ currentPage, setCurrentPage }) {
+export default function Dashboard() {
   const { gameState, advanceWeek } = useGame();
   const team = getTeamById(gameState.userTeamId);
   const standings = gameState.standings[gameState.userTeamId] || { wins: 0, losses: 0, ties: 0 };

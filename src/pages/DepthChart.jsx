@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useGame } from '../contexts/GameContext';
+import { useGame } from '../hooks/useGame';
 import { POSITIONS } from '../data/players';
 
 export default function DepthChart() {
-  const { gameState, updateRoster } = useGame();
+  const { gameState } = useGame();
   const [selectedPosition, setSelectedPosition] = useState('QB');
   
   const roster = gameState.rosters[gameState.userTeamId] || [];

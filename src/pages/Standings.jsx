@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGame } from '../contexts/GameContext';
+import { useGame } from '../hooks/useGame';
 import { getTeamById } from '../data/teams';
 
 export default function Standings() {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { GameProvider, useGame } from './contexts/GameContext';
+import { GameProvider } from './contexts/GameContext';
+import { useGame } from './hooks/useGame';
 import { getTeamById } from './data/teams';
 import TeamSelection from './pages/TeamSelection';
 import Dashboard from './pages/Dashboard';

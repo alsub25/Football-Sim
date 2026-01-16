@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGame } from '../contexts/GameContext';
+import { useGame } from '../hooks/useGame';
 import { POSITIONS } from '../data/players';
 
 export default function RosterManagement() {

@@ -1,16 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { NFL_TEAMS } from '../data/teams';
 import { generateRoster } from '../data/players';
 
-const GameContext = createContext();
-
-export const useGame = () => {
-  const context = useContext(GameContext);
-  if (!context) {
-    throw new Error('useGame must be used within GameProvider');
-  }
-  return context;
-};
+// eslint-disable-next-line react-refresh/only-export-components
+export const GameContext = createContext();
 
 export const GameProvider = ({ children }) => {
   const [gameState, setGameState] = useState(() => {
@@ -272,19 +265,14 @@ function simulateGame(game, rosters) {
   const homeStrength = calculateTeamStrength(homeRoster);
   const awayStrength = calculateTeamStrength(awayRoster);
   
-  // Simple simulation with some randomness
-  const homeBonus = 3; // Home field advantage
-  const totalStrength = homeStrength + homeBonus + awayStrength;
-  const homeWinChance = (homeStrength + homeBonus) / totalStrength;
-  
   const baseScore = 17;
   const variance = 14;
   
   let homeScore = baseScore + Math.floor(Math.random() * variance);
   let awayScore = baseScore + Math.floor(Math.random() * variance);
   
-  // Adjust based on team strength
-  homeScore += Math.floor((homeStrength - 70) / 10);
+  // Adjust based on team strength (including home field advantage)
+  homeScore += Math.floor((homeStrength - 70 + 3) / 10);
   awayScore += Math.floor((awayStrength - 70) / 10);
   
   // Ensure non-negative scores
