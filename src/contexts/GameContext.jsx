@@ -161,84 +161,113 @@ export const GameProvider = ({ children }) => {
   };
   
   const advanceRegularSeasonWeek = () => {
-    // Simulate games for the week
-    const weekGames = gameState.schedule.filter(
-      game => game.week === gameState.currentWeek && game.season === gameState.currentSeason
-    );
+    try {
+      console.log(`Simulating Week ${gameState.currentWeek}`);
+      
+      // Simulate games for the week
+      const weekGames = gameState.schedule.filter(
+        game => game.week === gameState.currentWeek && game.season === gameState.currentSeason
+      );
 
-    const results = weekGames.map(game => 
-      simulateGameDetailed(game, gameState.rosters, gameState.coachingStaffs)
-    );
+      console.log(`Found ${weekGames.length} games for week ${gameState.currentWeek}`);
 
-    // Check for injuries during games
-    const updatedRosters = { ...gameState.rosters };
-    results.forEach(result => {
-      // Check for injuries on both teams
-      [result.homeTeam, result.awayTeam].forEach(teamId => {
-        const roster = updatedRosters[teamId];
-        updatedRosters[teamId] = roster.map(player => {
-          // Skip players already injured
-          if (player.injury && player.injury.weeksRemaining > 0) return player;
-          
-          // Random chance of injury during game
-          if (checkForInjury(player)) {
-            const injury = generateInjury();
-            injury.occurredWeek = gameState.currentWeek;
-            injury.occurredSeason = gameState.currentSeason;
-            return { ...player, injury };
+      const results = weekGames.map(game => {
+        try {
+          return simulateGameDetailed(game, gameState.rosters, gameState.coachingStaffs);
+        } catch (error) {
+          console.error(`Error simulating game ${game.id}:`, error);
+          // Return a basic game result on error
+          return {
+            ...game,
+            homeScore: 0,
+            awayScore: 0,
+            played: true,
+            playByPlay: [],
+            playerStats: {},
+            error: true
+          };
+        }
+      });
+
+      // Check for injuries during games
+      const updatedRosters = { ...gameState.rosters };
+      results.forEach(result => {
+        // Check for injuries on both teams
+        [result.homeTeam, result.awayTeam].forEach(teamId => {
+          const roster = updatedRosters[teamId];
+          if (!roster) {
+            console.error(`No roster found for team ${teamId}`);
+            return;
           }
-          return player;
+          updatedRosters[teamId] = roster.map(player => {
+            // Skip players already injured
+            if (player.injury && player.injury.weeksRemaining > 0) return player;
+            
+            // Random chance of injury during game
+            if (checkForInjury(player)) {
+              const injury = generateInjury();
+              injury.occurredWeek = gameState.currentWeek;
+              injury.occurredSeason = gameState.currentSeason;
+              return { ...player, injury };
+            }
+            return player;
+          });
         });
       });
-    });
-    
-    // Heal injuries
-    Object.keys(updatedRosters).forEach(teamId => {
-      updatedRosters[teamId] = healInjuries(updatedRosters[teamId]);
-    });
-
-    // Update standings
-    const newStandings = { ...gameState.standings };
-    results.forEach(result => {
-      const { homeTeam, awayTeam, homeScore, awayScore } = result;
       
-      if (homeScore > awayScore) {
-        newStandings[homeTeam].wins++;
-        newStandings[awayTeam].losses++;
-      } else if (awayScore > homeScore) {
-        newStandings[awayTeam].wins++;
-        newStandings[homeTeam].losses++;
-      } else {
-        newStandings[homeTeam].ties++;
-        newStandings[awayTeam].ties++;
+      // Heal injuries
+      Object.keys(updatedRosters).forEach(teamId => {
+        updatedRosters[teamId] = healInjuries(updatedRosters[teamId]);
+      });
+
+      // Update standings
+      const newStandings = { ...gameState.standings };
+      results.forEach(result => {
+        const { homeTeam, awayTeam, homeScore, awayScore } = result;
+        
+        if (homeScore > awayScore) {
+          newStandings[homeTeam].wins++;
+          newStandings[awayTeam].losses++;
+        } else if (awayScore > homeScore) {
+          newStandings[awayTeam].wins++;
+          newStandings[homeTeam].losses++;
+        } else {
+          newStandings[homeTeam].ties++;
+          newStandings[awayTeam].ties++;
+        }
+        
+        newStandings[homeTeam].pointsFor += homeScore;
+        newStandings[homeTeam].pointsAgainst += awayScore;
+        newStandings[awayTeam].pointsFor += awayScore;
+        newStandings[awayTeam].pointsAgainst += homeScore;
+      });
+
+      // Check if regular season is over (week 18)
+      const nextWeek = gameState.currentWeek + 1;
+      const newPhase = nextWeek > 18 ? 'playoffs' : 'regular';
+      
+      let playoffBracket = gameState.playoffBracket;
+      if (newPhase === 'playoffs') {
+        // Generate playoff bracket
+        const seeding = determinePlayoffSeeding(newStandings, NFL_TEAMS);
+        playoffBracket = generatePlayoffBracket(seeding);
       }
-      
-      newStandings[homeTeam].pointsFor += homeScore;
-      newStandings[homeTeam].pointsAgainst += awayScore;
-      newStandings[awayTeam].pointsFor += awayScore;
-      newStandings[awayTeam].pointsAgainst += homeScore;
-    });
 
-    // Check if regular season is over (week 18)
-    const nextWeek = gameState.currentWeek + 1;
-    const newPhase = nextWeek > 18 ? 'playoffs' : 'regular';
-    
-    let playoffBracket = gameState.playoffBracket;
-    if (newPhase === 'playoffs') {
-      // Generate playoff bracket
-      const seeding = determinePlayoffSeeding(newStandings, NFL_TEAMS);
-      playoffBracket = generatePlayoffBracket(seeding);
+      console.log(`Week ${gameState.currentWeek} simulation complete. Moving to week ${nextWeek}`);
+
+      setGameState(prev => ({
+        ...prev,
+        currentWeek: newPhase === 'playoffs' ? 1 : nextWeek,
+        seasonPhase: newPhase,
+        standings: newStandings,
+        rosters: updatedRosters,
+        gameResults: [...prev.gameResults, ...results],
+        playoffBracket,
+      }));
+    } catch (error) {
+      console.error('Error in advanceRegularSeasonWeek:', error);
+      alert(`Error simulating week ${gameState.currentWeek}: ${error.message}. Please try again or start a new career if the issue persists.`);
     }
-
-    setGameState(prev => ({
-      ...prev,
-      currentWeek: newPhase === 'playoffs' ? 1 : nextWeek,
-      seasonPhase: newPhase,
-      standings: newStandings,
-      rosters: updatedRosters,
-      gameResults: [...prev.gameResults, ...results],
-      playoffBracket,
-    }));
   };
   
   const advancePlayoffWeek = () => {

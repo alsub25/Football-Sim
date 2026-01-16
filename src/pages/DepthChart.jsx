@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useGame } from '../hooks/useGame';
 import { POSITIONS } from '../data/players';
+import PlayerDetailModal from '../components/PlayerDetailModal';
 
 export default function DepthChart() {
-  const { gameState } = useGame();
+  const { gameState, releasePlayer } = useGame();
   const [selectedPosition, setSelectedPosition] = useState('QB');
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
   
   const roster = gameState.rosters[gameState.userTeamId] || [];
   
@@ -29,6 +31,14 @@ export default function DepthChart() {
 
   return (
     <div className="container">
+      {selectedPlayer && (
+        <PlayerDetailModal
+          player={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+          onRelease={releasePlayer}
+        />
+      )}
+      
       <h1 className="mb-3">Depth Chart</h1>
       <p className="text-muted mb-3">Organize your players by position</p>
 
@@ -97,7 +107,12 @@ export default function DepthChart() {
         ) : (
           <ul className="list">
             {getPlayersAtPosition(selectedPosition).map((player, idx) => (
-              <li key={player.id} className="list-item">
+              <li 
+                key={player.id} 
+                className="list-item"
+                onClick={() => setSelectedPlayer(player)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                     <span className="badge badge-info" style={{ fontSize: '0.75rem' }}>

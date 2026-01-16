@@ -24,6 +24,9 @@ export default function Dashboard({ setCurrentPage }) {
   
   // Get injured players count
   const injuredPlayers = roster.filter(p => p.injury && p.injury.weeksRemaining > 0).length;
+  
+  // Get players needing contract extensions
+  const contractsExpiring = roster.filter(p => p.contract && p.contract.yearsLeft <= 2).length;
 
   return (
     <div className="container">
@@ -60,6 +63,26 @@ export default function Dashboard({ setCurrentPage }) {
               style={{ width: '100%' }}
             >
               Go to Draft
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {(seasonPhase === 'regular' || seasonPhase === 'freeAgency') && contractsExpiring > 0 && (
+        <div className="card mb-2" style={{ background: 'var(--warning)', color: 'white' }}>
+          <div className="card-header" style={{ background: 'rgba(0,0,0,0.2)' }}>
+            📝 Contract Alerts
+          </div>
+          <div style={{ padding: '1rem' }}>
+            <p style={{ marginBottom: '1rem' }}>
+              {contractsExpiring} player{contractsExpiring !== 1 ? 's' : ''} {contractsExpiring !== 1 ? 'have' : 'has'} 2 or fewer years remaining on {contractsExpiring !== 1 ? 'their' : 'their'} contract{contractsExpiring !== 1 ? 's' : ''}.
+            </p>
+            <button 
+              className="btn-primary"
+              onClick={() => setCurrentPage('contracts')}
+              style={{ width: '100%' }}
+            >
+              Negotiate Extensions
             </button>
           </div>
         </div>

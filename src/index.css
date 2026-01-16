@@ -273,18 +273,20 @@ label {
 .table-responsive {
   overflow-x: auto;
   margin-bottom: 1rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 th, td {
-  padding: 0.75rem;
+  padding: 0.5rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 th {
@@ -292,6 +294,7 @@ th {
   font-weight: 600;
   position: sticky;
   top: 0;
+  z-index: 1;
 }
 
 tr:hover {
@@ -387,6 +390,10 @@ tr:hover {
   
   table {
     font-size: 1rem;
+  }
+  
+  th, td {
+    padding: 0.75rem;
   }
 }
 

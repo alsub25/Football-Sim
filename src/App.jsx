@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GameProvider } from './contexts/GameContext';
 import { useGame } from './hooks/useGame';
 import { getTeamById } from './data/teams';
+import ErrorBoundary from './components/ErrorBoundary';
 import TeamSelection from './pages/TeamSelection';
 import Dashboard from './pages/Dashboard';
 import RosterManagement from './pages/RosterManagement';
@@ -15,6 +16,7 @@ import Playoffs from './pages/Playoffs';
 import History from './pages/History';
 import Trades from './pages/Trades';
 import Statistics from './pages/Statistics';
+import ContractNegotiation from './pages/ContractNegotiation';
 
 function GameContent() {
   const { gameState, initializeGame, resetGame } = useGame();
@@ -32,6 +34,7 @@ function GameContent() {
     { id: 'roster', label: 'Roster', icon: '👥', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
     { id: 'depth', label: 'Depth Chart', icon: '📊', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
     { id: 'standings', label: 'Standings', icon: '🏆', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
+    { id: 'contracts', label: 'Contracts', icon: '📝', show: seasonPhase === 'regular' || seasonPhase === 'freeAgency' },
     { id: 'injuries', label: 'Injuries', icon: '🏥', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
     { id: 'statistics', label: 'Stats', icon: '📈', show: true },
     { id: 'coaching', label: 'Coaches', icon: '👔', show: true },
@@ -76,11 +79,12 @@ function GameContent() {
         </div>
       </div>
 
-      <main style={{ flex: 1, paddingBottom: '80px' }}>
+      <main style={{ flex: 1, paddingBottom: 'calc(70px + env(safe-area-inset-bottom))' }}>
         {currentPage === 'dashboard' && <Dashboard currentPage={currentPage} setCurrentPage={setCurrentPage} />}
         {currentPage === 'roster' && <RosterManagement />}
         {currentPage === 'depth' && <DepthChart />}
         {currentPage === 'standings' && <Standings />}
+        {currentPage === 'contracts' && <ContractNegotiation />}
         {currentPage === 'injuries' && <Injuries />}
         {currentPage === 'statistics' && <Statistics />}
         {currentPage === 'coaching' && <Coaching />}
@@ -96,9 +100,11 @@ function GameContent() {
 
 function App() {
   return (
-    <GameProvider>
-      <GameContent />
-    </GameProvider>
+    <ErrorBoundary>
+      <GameProvider>
+        <GameContent />
+      </GameProvider>
+    </ErrorBoundary>
   );
 }
 

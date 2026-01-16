@@ -79,23 +79,69 @@ export function generatePlayer(position, teamId, experience = 0) {
 }
 
 function generateRookieContract() {
+  const baseSalary = 500000 + Math.floor(Math.random() * 500000);
+  const signingBonus = baseSalary * 0.5;
   return {
     years: 4,
     yearsLeft: 4,
-    salary: 500000 + Math.floor(Math.random() * 500000),
+    salary: baseSalary,
+    signingBonus,
+    guaranteedMoney: baseSalary * 4 + signingBonus,
     type: 'Rookie',
+    bonuses: {
+      performance: {
+        playingTime: Math.floor(baseSalary * 0.1),
+        proRoster: Math.floor(baseSalary * 0.05),
+      },
+      milestones: {}
+    },
+    clauses: {
+      noTrade: false,
+      noFranchiseTag: false,
+    }
   };
 }
 
 function generateContract(overall) {
   const baseValue = Math.floor((overall - 50) * 100000 + 1000000);
   const years = 1 + Math.floor(Math.random() * 4);
+  const annualSalary = baseValue + Math.floor(Math.random() * 2000000);
+  const signingBonus = annualSalary * years * 0.3;
+  const guaranteedYears = Math.min(Math.ceil(years * 0.6), years);
+  
   return {
     years,
     yearsLeft: years,
-    salary: baseValue + Math.floor(Math.random() * 2000000),
+    salary: annualSalary,
+    signingBonus,
+    guaranteedMoney: annualSalary * guaranteedYears + signingBonus,
     type: 'Standard',
+    bonuses: {
+      performance: {
+        roster: Math.floor(annualSalary * 0.05),
+        playingTime: Math.floor(annualSalary * 0.08),
+      },
+      milestones: generateMilestoneBonuses(overall, annualSalary)
+    },
+    clauses: {
+      noTrade: overall >= 85,
+      noFranchiseTag: overall >= 90,
+    }
   };
+}
+
+function generateMilestoneBonuses(overall, salary) {
+  const bonuses = {};
+  
+  if (overall >= 75) {
+    bonuses.probowl = Math.floor(salary * 0.15);
+  }
+  
+  if (overall >= 80) {
+    bonuses.allPro = Math.floor(salary * 0.25);
+  }
+  
+  return bonuses;
 }
 
 function generateAttributes(position, baseRating) {
