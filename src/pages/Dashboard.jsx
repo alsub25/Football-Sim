@@ -75,7 +75,7 @@ export default function Dashboard({ setCurrentPage }) {
           </div>
           <div style={{ padding: '1rem' }}>
             <p style={{ marginBottom: '1rem' }}>
-              {contractsExpiring} player{contractsExpiring !== 1 ? 's' : ''} {contractsExpiring !== 1 ? 'have' : 'has'} 2 or fewer years remaining on {contractsExpiring !== 1 ? 'their' : 'their'} contract{contractsExpiring !== 1 ? 's' : ''}.
+              {contractsExpiring} player{contractsExpiring > 1 ? 's have' : ' has'} 2 or fewer years remaining on their contract{contractsExpiring > 1 ? 's' : ''}.
             </p>
             <button 
               className="btn-primary"

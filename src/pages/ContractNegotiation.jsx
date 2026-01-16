@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useGame } from '../hooks/useGame';
 
+// Helper function to calculate guaranteed money consistently
+const calculateGuaranteedMoney = (salary, years, signingBonus) => {
+  const guaranteedYears = Math.min(Math.ceil(years * 0.6), years);
+  return salary * guaranteedYears + signingBonus;
+};
+
 export default function ContractNegotiation() {
   const { gameState, updateRoster } = useGame();
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -67,11 +73,11 @@ export default function ContractNegotiation() {
 
     if (accepted) {
       // Update player contract
+      const signingBonus = offerSalary * offerYears * 0.3;
+      const guaranteedMoney = calculateGuaranteedMoney(offerSalary, offerYears, signingBonus);
+      
       const updatedRoster = roster.map(p => {
         if (p.id === selectedPlayer.id) {
-          const signingBonus = offerSalary * offerYears * 0.3;
-          const guaranteedYears = Math.min(Math.ceil(offerYears * 0.6), offerYears);
-          
           return {
             ...p,
             contract: {
@@ -80,7 +86,7 @@ export default function ContractNegotiation() {
               yearsLeft: offerYears,
               salary: offerSalary,
               signingBonus,
-              guaranteedMoney: offerSalary * guaranteedYears + signingBonus,
+              guaranteedMoney,
               type: 'Extension',
             }
           };
@@ -240,7 +246,7 @@ export default function ContractNegotiation() {
                   <div className="flex-between">
                     <span className="text-muted">Guaranteed Money (60%)</span>
                     <span style={{ fontWeight: '600', color: 'var(--success)' }}>
-                      {formatSalary(offerSalary * Math.ceil(offerYears * 0.6) + offerSalary * offerYears * 0.3)}
+                      {formatSalary(calculateGuaranteedMoney(offerSalary, offerYears, offerSalary * offerYears * 0.3))}
                     </span>
                   </div>
                 </div>

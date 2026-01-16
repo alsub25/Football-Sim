@@ -1,6 +1,14 @@
 import React from 'react';
 import { POSITIONS } from '../data/players';
 
+// Helper function to generate jersey number from player ID
+const getJerseyNumber = (player) => {
+  if (player.jerseyNumber) return player.jerseyNumber;
+  // Use player ID to generate a consistent jersey number
+  const idHash = (player.id?.charCodeAt(0) || 0) % 99;
+  return idHash + 1;
+};
+
 export default function PlayerDetailModal({ player, onClose, onRelease, onNegotiate }) {
   if (!player) return null;
 
@@ -38,7 +46,7 @@ export default function PlayerDetailModal({ player, onClose, onRelease, onNegoti
             <h2 style={{ marginBottom: '0.25rem' }}>{player.fullName}</h2>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <span className="badge badge-info">{player.position}</span>
-              <span className="text-muted">#{player.jerseyNumber || ((player.id?.charCodeAt(0) || 0) % 99) + 1}</span>
+              <span className="text-muted">#{getJerseyNumber(player)}</span>
               <span className="text-muted">Age: {player.age}</span>
               <span className="text-muted">Exp: {player.experience}y</span>
             </div>

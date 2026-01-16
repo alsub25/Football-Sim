@@ -8,6 +8,10 @@ export default function DepthChart() {
   const [selectedPosition, setSelectedPosition] = useState('QB');
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   
+  const handleRelease = (playerId) => {
+    releasePlayer(gameState.userTeamId, playerId);
+  };
+  
   const roster = gameState.rosters[gameState.userTeamId] || [];
   
   const positionGroups = {
@@ -35,7 +39,7 @@ export default function DepthChart() {
         <PlayerDetailModal
           player={selectedPlayer}
           onClose={() => setSelectedPlayer(null)}
-          onRelease={releasePlayer}
+          onRelease={handleRelease}
         />
       )}
       
