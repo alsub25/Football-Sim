@@ -7,6 +7,12 @@ import Dashboard from './pages/Dashboard';
 import RosterManagement from './pages/RosterManagement';
 import DepthChart from './pages/DepthChart';
 import Standings from './pages/Standings';
+import Draft from './pages/Draft';
+import FreeAgency from './pages/FreeAgency';
+import Injuries from './pages/Injuries';
+import Coaching from './pages/Coaching';
+import Playoffs from './pages/Playoffs';
+import History from './pages/History';
 
 function GameContent() {
   const { gameState, initializeGame, resetGame } = useGame();
@@ -17,13 +23,20 @@ function GameContent() {
   }
 
   const team = getTeamById(gameState.userTeamId);
+  const seasonPhase = gameState.seasonPhase;
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
-    { id: 'roster', label: 'Roster', icon: '👥' },
-    { id: 'depth', label: 'Depth Chart', icon: '📊' },
-    { id: 'standings', label: 'Standings', icon: '🏆' },
-  ];
+    { id: 'dashboard', label: 'Dashboard', icon: '🏠', show: true },
+    { id: 'roster', label: 'Roster', icon: '👥', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
+    { id: 'depth', label: 'Depth Chart', icon: '📊', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
+    { id: 'standings', label: 'Standings', icon: '🏆', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
+    { id: 'injuries', label: 'Injuries', icon: '🏥', show: seasonPhase === 'regular' || seasonPhase === 'playoffs' },
+    { id: 'coaching', label: 'Coaches', icon: '👔', show: true },
+    { id: 'draft', label: 'Draft', icon: '🎯', show: seasonPhase === 'draft' },
+    { id: 'freeagency', label: 'Free Agency', icon: '✍️', show: seasonPhase === 'freeAgency' },
+    { id: 'playoffs', label: 'Playoffs', icon: '🏈', show: seasonPhase === 'playoffs' },
+    { id: 'history', label: 'History', icon: '📚', show: true },
+  ].filter(item => item.show);
 
   return (
     <>
@@ -64,6 +77,12 @@ function GameContent() {
         {currentPage === 'roster' && <RosterManagement />}
         {currentPage === 'depth' && <DepthChart />}
         {currentPage === 'standings' && <Standings />}
+        {currentPage === 'injuries' && <Injuries />}
+        {currentPage === 'coaching' && <Coaching />}
+        {currentPage === 'draft' && <Draft />}
+        {currentPage === 'freeagency' && <FreeAgency />}
+        {currentPage === 'playoffs' && <Playoffs />}
+        {currentPage === 'history' && <History />}
       </main>
     </>
   );

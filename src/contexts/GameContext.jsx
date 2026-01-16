@@ -399,6 +399,7 @@ export const GameProvider = ({ children }) => {
 
   const value = {
     gameState,
+    setGameState,
     initializeGame,
     updateRoster,
     signFreeAgent,
