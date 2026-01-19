@@ -193,6 +193,18 @@ function simulatePlay(quarter, down, yardsToGo, yardLine, offense, offenseRoster
   const isGoalLine = yardLine >= 95;
   const strengthDiff = offenseStrength - defenseStrength;
   
+  // Get key players for stats tracking
+  const qb = offenseRoster.find(p => p.position === 'QB' && (!p.injury || p.injury.weeksRemaining === 0));
+  const rb = offenseRoster.find(p => p.position === 'RB' && (!p.injury || p.injury.weeksRemaining === 0));
+  const wr = offenseRoster.find(p => p.position === 'WR' && (!p.injury || p.injury.weeksRemaining === 0));
+  const te = offenseRoster.find(p => p.position === 'TE' && (!p.injury || p.injury.weeksRemaining === 0));
+  
+  // Get defensive players for stats tracking
+  const defensePlayersForStats = defenseRoster.filter(p => 
+    ['DE', 'DT', 'LB', 'CB', 'S'].includes(p.position) && 
+    (!p.injury || p.injury.weeksRemaining === 0)
+  );
+  
   if (down === 4) {
     if (yardLine > 60 && yardLine < 97) {
       playType = PLAY_TYPES.FIELD_GOAL;
@@ -214,8 +226,29 @@ function simulatePlay(quarter, down, yardsToGo, yardLine, offense, offenseRoster
         playType = PLAY_TYPES.FUMBLE;
         result = 'TURNOVER';
         yards = 0;
+        
+        // Award fumble recovery to random defender
+        if (defensePlayersForStats.length > 0) {
+          const defender = defensePlayersForStats[Math.floor(Math.random() * defensePlayersForStats.length)];
+          if (playerStats[defender.id]) {
+            playerStats[defender.id].tackles = (playerStats[defender.id].tackles || 0) + 1;
+          }
+        }
       } else {
         result = yards >= yardsToGo ? 'FIRST_DOWN' : 'GAIN';
+        
+        // Track rushing yards for RB
+        if (rb && playerStats[rb.id]) {
+          playerStats[rb.id].rushingYards = (playerStats[rb.id].rushingYards || 0) + Math.max(0, yards);
+        }
+        
+        // Award tackle to random defender if stopped short
+        if (yards <= 3 && defensePlayersForStats.length > 0) {
+          const defender = defensePlayersForStats[Math.floor(Math.random() * defensePlayersForStats.length)];
+          if (playerStats[defender.id]) {
+            playerStats[defender.id].tackles = (playerStats[defender.id].tackles || 0) + 1;
+          }
+        }
       }
     } else {
       playType = Math.random() < 0.5 ? PLAY_TYPES.SHORT_PASS : PLAY_TYPES.MEDIUM_PASS;
@@ -225,11 +258,36 @@ function simulatePlay(quarter, down, yardsToGo, yardLine, offense, offenseRoster
         playType = PLAY_TYPES.SACK;
         yards = -5 - Math.floor(Math.random() * 5);
         result = 'SACK';
+        
+        // Award sack to random pass rusher
+        const passRushers = defenseRoster.filter(p => 
+          ['DE', 'DT', 'LB'].includes(p.position) && 
+          (!p.injury || p.injury.weeksRemaining === 0)
+        );
+        if (passRushers.length > 0) {
+          const rusher = passRushers[Math.floor(Math.random() * passRushers.length)];
+          if (playerStats[rusher.id]) {
+            playerStats[rusher.id].sacks = (playerStats[rusher.id].sacks || 0) + 1;
+            playerStats[rusher.id].tackles = (playerStats[rusher.id].tackles || 0) + 1;
+          }
+        }
       } else if (Math.random() < 0.03) {
         // Interception
         playType = PLAY_TYPES.INTERCEPTION;
         result = 'TURNOVER';
         yards = 0;
+        
+        // Award interception to random DB
+        const dbs = defenseRoster.filter(p => 
+          ['CB', 'S'].includes(p.position) && 
+          (!p.injury || p.injury.weeksRemaining === 0)
+        );
+        if (dbs.length > 0) {
+          const db = dbs[Math.floor(Math.random() * dbs.length)];
+          if (playerStats[db.id]) {
+            playerStats[db.id].interceptions = (playerStats[db.id].interceptions || 0) + 1;
+          }
+        }
       } else {
         // Completion chance
         const completionChance = 0.6 + strengthDiff / 100;
@@ -237,6 +295,25 @@ function simulatePlay(quarter, down, yardsToGo, yardLine, offense, offenseRoster
           const baseYards = playType === PLAY_TYPES.SHORT_PASS ? 7 : 15;
           yards = Math.round(Math.max(0, baseYards + (Math.random() * 10 - 5)));
           result = yards >= yardsToGo ? 'FIRST_DOWN' : 'GAIN';
+          
+          // Track passing yards for QB
+          if (qb && playerStats[qb.id]) {
+            playerStats[qb.id].passingYards = (playerStats[qb.id].passingYards || 0) + Math.max(0, yards);
+          }
+          
+          // Track receiving yards for receiver (randomly choose WR or TE)
+          const receiver = Math.random() < 0.7 ? wr : te;
+          if (receiver && playerStats[receiver.id]) {
+            playerStats[receiver.id].receivingYards = (playerStats[receiver.id].receivingYards || 0) + Math.max(0, yards);
+          }
+          
+          // Award tackle to random defender
+          if (defensePlayersForStats.length > 0) {
+            const defender = defensePlayersForStats[Math.floor(Math.random() * defensePlayersForStats.length)];
+            if (playerStats[defender.id]) {
+              playerStats[defender.id].tackles = (playerStats[defender.id].tackles || 0) + 1;
+            }
+          }
         } else {
           yards = 0;
           result = 'INCOMPLETE';

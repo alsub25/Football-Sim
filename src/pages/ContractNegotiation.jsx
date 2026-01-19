@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import { useGame } from '../hooks/useGame';
-
-// Helper function to calculate guaranteed money consistently
-const calculateGuaranteedMoney = (salary, years, signingBonus) => {
-  const guaranteedYears = Math.min(Math.ceil(years * 0.6), years);
-  return salary * guaranteedYears + signingBonus;
-};
+import ContractModal from '../components/ContractModal';
+import { calculateMarketValue } from '../utils/contractUtils';
 
 export default function ContractNegotiation() {
   const { gameState, updateRoster } = useGame();
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [offerYears, setOfferYears] = useState(3);
-  const [offerSalary, setOfferSalary] = useState(0);
 
   const roster = gameState.rosters[gameState.userTeamId] || [];
   
@@ -34,72 +28,26 @@ export default function ContractNegotiation() {
     return 'var(--danger)';
   };
 
-  const calculateMarketValue = (player) => {
-    // Calculate market value based on overall, age, position
-    const baseValue = (player.overall - 50) * 200000 + 2000000;
-    const ageFactor = player.age < 30 ? 1.2 : player.age < 33 ? 1.0 : 0.8;
-    const positionMultiplier = ['QB', 'LT', 'DE', 'CB'].includes(player.position) ? 1.3 : 1.0;
-    
-    return Math.floor(baseValue * ageFactor * positionMultiplier);
-  };
-
   const handleSelectPlayer = (player) => {
     setSelectedPlayer(player);
-    const marketValue = calculateMarketValue(player);
-    setOfferSalary(marketValue);
-    setOfferYears(3);
   };
 
-  const handleNegotiate = () => {
+  const handleAcceptContract = (contract) => {
     if (!selectedPlayer) return;
 
-    const marketValue = calculateMarketValue(selectedPlayer);
-    const offerRatio = offerSalary / marketValue;
-    
-    // Simple acceptance logic - using deterministic approach
-    let accepted = false;
-    const playerIdHash = selectedPlayer.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const randomSeed = (playerIdHash + offerSalary + offerYears) % 100;
-    
-    if (offerRatio >= 1.1) {
-      accepted = true; // Happy to accept
-    } else if (offerRatio >= 0.9) {
-      accepted = randomSeed > 30; // 70% chance
-    } else if (offerRatio >= 0.75) {
-      accepted = randomSeed > 60; // 40% chance
-    } else {
-      accepted = randomSeed > 90; // 10% chance
-    }
+    const updatedRoster = roster.map(p => {
+      if (p.id === selectedPlayer.id) {
+        return {
+          ...p,
+          contract,
+        };
+      }
+      return p;
+    });
 
-    if (accepted) {
-      // Update player contract
-      const signingBonus = offerSalary * offerYears * 0.3;
-      const guaranteedMoney = calculateGuaranteedMoney(offerSalary, offerYears, signingBonus);
-      
-      const updatedRoster = roster.map(p => {
-        if (p.id === selectedPlayer.id) {
-          return {
-            ...p,
-            contract: {
-              ...p.contract,
-              years: offerYears,
-              yearsLeft: offerYears,
-              salary: offerSalary,
-              signingBonus,
-              guaranteedMoney,
-              type: 'Extension',
-            }
-          };
-        }
-        return p;
-      });
-
-      updateRoster(gameState.userTeamId, updatedRoster);
-      alert(`${selectedPlayer.fullName} has accepted your offer!\n\n${offerYears} years, ${formatSalary(offerSalary)}/year`);
-      setSelectedPlayer(null);
-    } else {
-      alert(`${selectedPlayer.fullName} has rejected your offer.\n\nThey are looking for around ${formatSalary(marketValue)}/year.`);
-    }
+    updateRoster(gameState.userTeamId, updatedRoster);
+    alert(`${selectedPlayer.fullName} has accepted your offer!\n\n${contract.years} years, ${formatSalary(contract.salary)}/year`);
+    setSelectedPlayer(null);
   };
 
   const salaryCap = 200000000;
@@ -108,6 +56,15 @@ export default function ContractNegotiation() {
 
   return (
     <div className="container">
+      {selectedPlayer && (
+        <ContractModal
+          player={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+          onAccept={handleAcceptContract}
+          availableCap={availableCap}
+        />
+      )}
+      
       <h1 className="mb-2">Contract Negotiations</h1>
       <p className="text-muted mb-3">Negotiate extensions with players entering their final contract years</p>
 
@@ -155,7 +112,6 @@ export default function ContractNegotiation() {
                     onClick={() => handleSelectPlayer(player)}
                     style={{ 
                       cursor: 'pointer',
-                      background: selectedPlayer?.id === player.id ? 'var(--surface-light)' : 'transparent'
                     }}
                   >
                     <div style={{ flex: 1 }}>
@@ -172,7 +128,7 @@ export default function ContractNegotiation() {
                         <span className="text-muted">Age: {player.age}</span>
                         <span className="text-muted">{player.contract.yearsLeft}y left</span>
                         <span className="text-muted">Current: {formatSalary(player.contract.salary)}</span>
-                        <span style={{ color: 'var(--success)' }}>Market: {formatSalary(marketValue)}</span>
+                        <span style={{ color: 'var(--success)' }}>Market: {formatSalary(calculateMarketValue(player))}</span>
                       </div>
                     </div>
                     <div style={{ 
@@ -187,96 +143,6 @@ export default function ContractNegotiation() {
               })}
             </ul>
           </div>
-
-          {selectedPlayer && (
-            <div className="card">
-              <div className="card-header">
-                Negotiate with {selectedPlayer.fullName}
-              </div>
-              <div style={{ display: 'grid', gap: '1rem' }}>
-                <div>
-                  <label>Contract Length (Years)</label>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    {[1, 2, 3, 4, 5].map(years => (
-                      <button
-                        key={years}
-                        className={offerYears === years ? 'btn-primary' : 'btn-secondary'}
-                        onClick={() => setOfferYears(years)}
-                        style={{ flex: 1 }}
-                      >
-                        {years}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label>Annual Salary</label>
-                  <input
-                    type="range"
-                    min={Math.floor(calculateMarketValue(selectedPlayer) * 0.5)}
-                    max={Math.floor(calculateMarketValue(selectedPlayer) * 1.5)}
-                    step={100000}
-                    value={offerSalary}
-                    onChange={(e) => setOfferSalary(parseInt(e.target.value))}
-                  />
-                  <div className="flex-between" style={{ marginTop: '0.5rem' }}>
-                    <span style={{ fontSize: '1.5rem', fontWeight: '600' }}>
-                      {formatSalary(offerSalary)}
-                    </span>
-                    <span className="text-muted">
-                      per year
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ padding: '1rem', background: 'var(--surface-light)', borderRadius: '8px' }}>
-                  <div className="flex-between mb-1">
-                    <span className="text-muted">Total Contract Value</span>
-                    <span style={{ fontWeight: '600', fontSize: '1.1rem' }}>
-                      {formatSalary(offerSalary * offerYears)}
-                    </span>
-                  </div>
-                  <div className="flex-between mb-1">
-                    <span className="text-muted">Signing Bonus (30%)</span>
-                    <span style={{ fontWeight: '600' }}>
-                      {formatSalary(offerSalary * offerYears * 0.3)}
-                    </span>
-                  </div>
-                  <div className="flex-between">
-                    <span className="text-muted">Guaranteed Money (60%)</span>
-                    <span style={{ fontWeight: '600', color: 'var(--success)' }}>
-                      {formatSalary(calculateGuaranteedMoney(offerSalary, offerYears, offerSalary * offerYears * 0.3))}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ padding: '1rem', background: 'var(--info)', color: 'white', borderRadius: '8px' }}>
-                  <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>Market Comparison</div>
-                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                    Market Value: {formatSalary(calculateMarketValue(selectedPlayer))} per year
-                    {offerSalary > calculateMarketValue(selectedPlayer) * 1.1 && (
-                      <div>✅ This is a very competitive offer</div>
-                    )}
-                    {offerSalary >= calculateMarketValue(selectedPlayer) * 0.9 && offerSalary <= calculateMarketValue(selectedPlayer) * 1.1 && (
-                      <div>💼 This is a fair market offer</div>
-                    )}
-                    {offerSalary < calculateMarketValue(selectedPlayer) * 0.9 && (
-                      <div>⚠️ This may be below market value</div>
-                    )}
-                  </div>
-                </div>
-
-                <button 
-                  className="btn-primary"
-                  onClick={handleNegotiate}
-                  disabled={offerSalary > availableCap}
-                >
-                  {offerSalary > availableCap ? 'Insufficient Cap Space' : 'Make Offer'}
-                </button>
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>
