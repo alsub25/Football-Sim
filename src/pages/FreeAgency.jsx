@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useGame } from '../hooks/useGame';
 import { getTeamById } from '../data/teams';
 import { calculateMarketValue, getCapSpace, calculateTeamSalary } from '../data/freeAgency';
+import ContractModal from '../components/ContractModal';
 
 export default function FreeAgency() {
   const { gameState, signFreeAgent, releasePlayer, startRegularSeason } = useGame();
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [offerYears, setOfferYears] = useState(3);
+  const [contractPlayer, setContractPlayer] = useState(null);
   const [filterPosition, setFilterPosition] = useState('ALL');
   
   const userTeam = getTeamById(gameState.userTeamId);
@@ -22,29 +23,31 @@ export default function FreeAgency() {
     : freeAgents.filter(p => p.position === filterPosition);
   
   const handleSign = (player) => {
-    const marketValue = calculateMarketValue(player);
-    const totalCost = marketValue * offerYears;
-    
-    if (marketValue > capSpace) {
-      alert('Not enough cap space to sign this player!');
-      return;
-    }
-    
-    const contract = {
-      years: offerYears,
-      yearsLeft: offerYears,
-      salary: marketValue,
-      type: 'Free Agent',
-    };
-    
-    signFreeAgent(player.id, gameState.userTeamId, contract);
     setSelectedPlayer(null);
+    setContractPlayer(player);
+  };
+
+  const handleAcceptContract = (contract) => {
+    if (!contractPlayer) return;
+    
+    signFreeAgent(contractPlayer.id, gameState.userTeamId, contract);
+    alert(`${contractPlayer.fullName} has accepted your offer and joined the team!\n\n${contract.years} years, $${(contract.salary / 1000000).toFixed(2)}M/year`);
+    setContractPlayer(null);
   };
   
   const positions = ['ALL', 'QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', 'S', 'K', 'P'];
   
   return (
     <div className="container">
+      {contractPlayer && (
+        <ContractModal
+          player={contractPlayer}
+          onClose={() => setContractPlayer(null)}
+          onAccept={handleAcceptContract}
+          availableCap={capSpace}
+        />
+      )}
+      
       <div className="flex-between mb-2">
         <div>
           <h1>Free Agency</h1>
@@ -153,26 +156,9 @@ export default function FreeAgency() {
                   {selectedPlayer?.id === player.id && (
                     <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                       <div className="flex-between mb-1">
-                        <span>Contract Length:</span>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          {[1, 2, 3, 4, 5].map(years => (
-                            <button
-                              key={years}
-                              className={`btn-small ${offerYears === years ? 'btn-primary' : 'btn-secondary'}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOfferYears(years);
-                              }}
-                            >
-                              {years}yr
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex-between mb-1">
-                        <span>Total Value:</span>
-                        <span style={{ fontWeight: '600' }}>
-                          ${((marketValue * offerYears) / 1000000).toFixed(1)}M
+                        <span>Market Value:</span>
+                        <span style={{ fontWeight: '600', color: 'var(--primary-color)' }}>
+                          ${(marketValue / 1000000).toFixed(1)}M/yr
                         </span>
                       </div>
                       <button 
@@ -184,7 +170,7 @@ export default function FreeAgency() {
                         disabled={!canAfford}
                         style={{ width: '100%', marginTop: '0.5rem' }}
                       >
-                        {canAfford ? `Sign ${player.firstName} ${player.lastName}` : 'Not Enough Cap Space'}
+                        {canAfford ? `Negotiate Contract` : 'Not Enough Cap Space'}
                       </button>
                     </div>
                   )}

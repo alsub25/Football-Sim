@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useGame } from '../hooks/useGame';
 import { POSITIONS } from '../data/players';
 import PlayerDetailModal from '../components/PlayerDetailModal';
+import ContractModal from '../components/ContractModal';
 
 export default function RosterManagement() {
-  const { gameState, releasePlayer } = useGame();
+  const { gameState, releasePlayer, updateRoster } = useGame();
   const [positionFilter, setPositionFilter] = useState('all');
   const [sortBy, setSortBy] = useState('overall');
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [contractPlayer, setContractPlayer] = useState(null);
   
   const roster = gameState.rosters[gameState.userTeamId] || [];
   
@@ -38,6 +40,29 @@ export default function RosterManagement() {
     }
   };
 
+  const handleNegotiate = (player) => {
+    setSelectedPlayer(null);
+    setContractPlayer(player);
+  };
+
+  const handleAcceptContract = (contract) => {
+    if (!contractPlayer) return;
+
+    const updatedRoster = roster.map(p => {
+      if (p.id === contractPlayer.id) {
+        return {
+          ...p,
+          contract,
+        };
+      }
+      return p;
+    });
+
+    updateRoster(gameState.userTeamId, updatedRoster);
+    alert(`${contractPlayer.fullName} has accepted your offer!\n\n${contract.years} years, ${formatSalary(contract.salary)}/year`);
+    setContractPlayer(null);
+  };
+
   const formatSalary = (salary) => {
     return `$${(salary / 1000000).toFixed(2)}M`;
   };
@@ -56,6 +81,16 @@ export default function RosterManagement() {
           player={selectedPlayer}
           onClose={() => setSelectedPlayer(null)}
           onRelease={handleRelease}
+          onNegotiate={handleNegotiate}
+        />
+      )}
+      
+      {contractPlayer && (
+        <ContractModal
+          player={contractPlayer}
+          onClose={() => setContractPlayer(null)}
+          onAccept={handleAcceptContract}
+          availableCap={salaryCap - totalSalary}
         />
       )}
       
