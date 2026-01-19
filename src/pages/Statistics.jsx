@@ -17,14 +17,6 @@ export default function Statistics() {
     overall: Math.round(userRoster.reduce((sum, p) => sum + p.overall, 0) / userRoster.length || 70),
   };
   
-  // Get top players by position
-  const getTopPlayers = (position, limit = 5) => {
-    return userRoster
-      .filter(p => p.position === position)
-      .sort((a, b) => b.overall - a.overall)
-      .slice(0, limit);
-  };
-  
   const renderTeamStats = () => (
     <div>
       <div className="card mb-2">
@@ -87,75 +79,149 @@ export default function Statistics() {
     </div>
   );
   
-  const renderPlayerStats = () => (
-    <div>
-      <div className="card mb-2">
-        <div className="card-header">Top Quarterbacks</div>
-        <div>
-          {getTopPlayers('QB', 3).map(player => (
-            <div key={player.id} className="list-item">
-              <div className="flex-between">
-                <div>
-                  <div style={{ fontWeight: '600' }}>{player.fullName}</div>
-                  <div className="text-muted" style={{ fontSize: '0.875rem' }}>
-                    Age {player.age} · {player.experience} yrs exp
+  const renderPlayerStats = () => {
+    // Get player stats with their roster info
+    const playersWithStats = userRoster.map(player => {
+      const stats = gameState.playerSeasonStats[player.id] || {};
+      return {
+        ...player,
+        stats: {
+          gamesPlayed: stats.gamesPlayed || 0,
+          passingYards: stats.passingYards || 0,
+          rushingYards: stats.rushingYards || 0,
+          receivingYards: stats.receivingYards || 0,
+          tackles: stats.tackles || 0,
+          sacks: stats.sacks || 0,
+          interceptions: stats.interceptions || 0,
+        }
+      };
+    });
+    
+    const qbs = playersWithStats.filter(p => p.position === 'QB').sort((a, b) => b.stats.passingYards - a.stats.passingYards);
+    const rbs = playersWithStats.filter(p => p.position === 'RB').sort((a, b) => b.stats.rushingYards - a.stats.rushingYards);
+    const receivers = playersWithStats.filter(p => ['WR', 'TE'].includes(p.position)).sort((a, b) => b.stats.receivingYards - a.stats.receivingYards);
+    const defenders = playersWithStats.filter(p => ['DE', 'DT', 'LB', 'CB', 'S'].includes(p.position)).sort((a, b) => (b.stats.tackles + b.stats.sacks * 2) - (a.stats.tackles + a.stats.sacks * 2));
+    
+    return (
+      <div>
+        <div className="card mb-2">
+          <div className="card-header">Passing Leaders</div>
+          <div>
+            {qbs.slice(0, 3).map(player => (
+              <div key={player.id} className="list-item">
+                <div className="flex-between">
+                  <div>
+                    <div style={{ fontWeight: '600' }}>{player.fullName}</div>
+                    <div className="text-muted" style={{ fontSize: '0.875rem' }}>
+                      {player.stats.gamesPlayed} GP
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary-color)' }}>
+                      {player.stats.passingYards}
+                    </div>
+                    <div className="text-muted" style={{ fontSize: '0.875rem' }}>Pass Yds</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>{player.overall}</div>
-                  <div className="text-muted" style={{ fontSize: '0.875rem' }}>Overall</div>
-                </div>
               </div>
-            </div>
-          ))}
+            ))}
+            {qbs.length === 0 && (
+              <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No stats yet - simulate games to see player performance
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      
-      <div className="card mb-2">
-        <div className="card-header">Top Pass Catchers</div>
-        <div>
-          {[...getTopPlayers('WR', 2), ...getTopPlayers('TE', 1)].map(player => (
-            <div key={player.id} className="list-item">
-              <div className="flex-between">
-                <div>
-                  <div style={{ fontWeight: '600' }}>{player.fullName}</div>
-                  <div className="text-muted" style={{ fontSize: '0.875rem' }}>
-                    {player.position} · Age {player.age}
+        
+        <div className="card mb-2">
+          <div className="card-header">Rushing Leaders</div>
+          <div>
+            {rbs.slice(0, 3).map(player => (
+              <div key={player.id} className="list-item">
+                <div className="flex-between">
+                  <div>
+                    <div style={{ fontWeight: '600' }}>{player.fullName}</div>
+                    <div className="text-muted" style={{ fontSize: '0.875rem' }}>
+                      {player.stats.gamesPlayed} GP
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--success)' }}>
+                      {player.stats.rushingYards}
+                    </div>
+                    <div className="text-muted" style={{ fontSize: '0.875rem' }}>Rush Yds</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>{player.overall}</div>
-                  <div className="text-muted" style={{ fontSize: '0.875rem' }}>Overall</div>
-                </div>
               </div>
-            </div>
-          ))}
+            ))}
+            {rbs.length === 0 && (
+              <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No stats yet - simulate games to see player performance
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      
-      <div className="card mb-2">
-        <div className="card-header">Top Defenders</div>
-        <div>
-          {[...getTopPlayers('DE', 1), ...getTopPlayers('LB', 1), ...getTopPlayers('CB', 1)].map(player => (
-            <div key={player.id} className="list-item">
-              <div className="flex-between">
-                <div>
-                  <div style={{ fontWeight: '600' }}>{player.fullName}</div>
-                  <div className="text-muted" style={{ fontSize: '0.875rem' }}>
-                    {player.position} · Age {player.age}
+        
+        <div className="card mb-2">
+          <div className="card-header">Receiving Leaders</div>
+          <div>
+            {receivers.slice(0, 3).map(player => (
+              <div key={player.id} className="list-item">
+                <div className="flex-between">
+                  <div>
+                    <div style={{ fontWeight: '600' }}>{player.fullName}</div>
+                    <div className="text-muted" style={{ fontSize: '0.875rem' }}>
+                      {player.position} · {player.stats.gamesPlayed} GP
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--secondary-color)' }}>
+                      {player.stats.receivingYards}
+                    </div>
+                    <div className="text-muted" style={{ fontSize: '0.875rem' }}>Rec Yds</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div style={{ fontSize: '1.5rem', fontWeight: '700' }}>{player.overall}</div>
-                  <div className="text-muted" style={{ fontSize: '0.875rem' }}>Overall</div>
+              </div>
+            ))}
+            {receivers.length === 0 && (
+              <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No stats yet - simulate games to see player performance
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="card mb-2">
+          <div className="card-header">Defensive Leaders</div>
+          <div>
+            {defenders.slice(0, 3).map(player => (
+              <div key={player.id} className="list-item">
+                <div className="flex-between">
+                  <div>
+                    <div style={{ fontWeight: '600' }}>{player.fullName}</div>
+                    <div className="text-muted" style={{ fontSize: '0.875rem' }}>
+                      {player.position} · {player.stats.gamesPlayed} GP
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--danger)' }}>
+                      {player.stats.tackles}T · {player.stats.sacks}S · {player.stats.interceptions}I
+                    </div>
+                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>Tackles · Sacks · Ints</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+            {defenders.length === 0 && (
+              <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No stats yet - simulate games to see player performance
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
   
   const renderLeagueStats = () => (
     <div className="card">
@@ -224,7 +290,7 @@ export default function Statistics() {
             onClick={() => setTab('players')}
             style={{ flex: 1 }}
           >
-            Top Players
+            Player Stats
           </button>
           <button
             className={`btn-small ${tab === 'league' ? 'btn-primary' : 'btn-secondary'}`}
