@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGame } from '../hooks/useGame';
 import ContractModal from '../components/ContractModal';
+import { calculateMarketValue } from '../utils/contractUtils';
 
 export default function ContractNegotiation() {
   const { gameState, updateRoster } = useGame();
@@ -146,13 +147,4 @@ export default function ContractNegotiation() {
       )}
     </div>
   );
-}
-
-function calculateMarketValue(player) {
-  // Calculate market value based on overall, age, position
-  const baseValue = (player.overall - 50) * 200000 + 2000000;
-  const ageFactor = player.age < 30 ? 1.2 : player.age < 33 ? 1.0 : 0.8;
-  const positionMultiplier = ['QB', 'LT', 'DE', 'CB'].includes(player.position) ? 1.3 : 1.0;
-  
-  return Math.floor(baseValue * ageFactor * positionMultiplier);
 }

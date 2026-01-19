@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-
-// Helper function to calculate guaranteed money consistently
-const calculateGuaranteedMoney = (salary, years, signingBonus, guaranteedPercentage) => {
-  const guaranteedYears = Math.ceil(years * guaranteedPercentage / 100);
-  return salary * guaranteedYears + signingBonus;
-};
+import { calculateMarketValue, calculateGuaranteedMoney } from '../utils/contractUtils';
 
 export default function ContractModal({ player, onClose, onAccept, availableCap }) {
   const [offerYears, setOfferYears] = useState(3);
@@ -430,13 +425,4 @@ export default function ContractModal({ player, onClose, onAccept, availableCap 
       </div>
     </div>
   );
-}
-
-function calculateMarketValue(player) {
-  // Calculate market value based on overall, age, position
-  const baseValue = (player.overall - 50) * 200000 + 2000000;
-  const ageFactor = player.age < 30 ? 1.2 : player.age < 33 ? 1.0 : 0.8;
-  const positionMultiplier = ['QB', 'LT', 'DE', 'CB'].includes(player.position) ? 1.3 : 1.0;
-  
-  return Math.floor(baseValue * ageFactor * positionMultiplier);
 }
