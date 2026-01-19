@@ -1,4 +1,5 @@
 // Free Agency System
+import { calculateMarketValue } from '../utils/contractUtils';
 
 // Generate free agent offers from teams
 export function generateFreeAgentOffer(player, teamId, teamCapSpace) {
@@ -23,48 +24,6 @@ export function generateFreeAgentOffer(player, teamId, teamCapSpace) {
     annualValue: offerValue,
     guaranteed: Math.round(offerValue * years * 0.6),
   };
-}
-
-// Calculate player's market value
-export function calculateMarketValue(player) {
-  const overall = player.overall;
-  const age = player.age;
-  const position = player.position;
-  
-  // Base salary based on overall rating
-  let baseValue = (overall - 50) * 150000 + 1000000;
-  
-  // Age adjustment
-  if (age < 25) {
-    baseValue *= 1.1; // Young players worth more
-  } else if (age > 30) {
-    baseValue *= Math.max(0.6, 1 - (age - 30) * 0.1); // Older players worth less
-  }
-  
-  // Position value adjustment
-  const positionMultipliers = {
-    QB: 2.0,
-    LT: 1.4,
-    RT: 1.3,
-    DE: 1.3,
-    CB: 1.3,
-    WR: 1.2,
-    DT: 1.1,
-    LB: 1.0,
-    S: 0.95,
-    TE: 0.95,
-    RB: 0.85,
-    C: 0.9,
-    LG: 0.85,
-    RG: 0.85,
-    FB: 0.7,
-    K: 0.6,
-    P: 0.6,
-  };
-  
-  baseValue *= positionMultipliers[position] || 1.0;
-  
-  return Math.round(baseValue);
 }
 
 function calculateContractLength(player) {

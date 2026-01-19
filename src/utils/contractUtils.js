@@ -2,16 +2,49 @@
 
 /**
  * Calculate the market value for a player based on overall rating, age, and position
+ * This uses the same formula as freeAgency.js to ensure consistency
  * @param {Object} player - The player object
  * @returns {number} - The calculated market value in dollars
  */
 export function calculateMarketValue(player) {
-  // Calculate market value based on overall, age, position
-  const baseValue = (player.overall - 50) * 200000 + 2000000;
-  const ageFactor = player.age < 30 ? 1.2 : player.age < 33 ? 1.0 : 0.8;
-  const positionMultiplier = ['QB', 'LT', 'DE', 'CB'].includes(player.position) ? 1.3 : 1.0;
+  const overall = player.overall;
+  const age = player.age;
+  const position = player.position;
   
-  return Math.floor(baseValue * ageFactor * positionMultiplier);
+  // Base salary based on overall rating
+  let baseValue = (overall - 50) * 150000 + 1000000;
+  
+  // Age adjustment
+  if (age < 25) {
+    baseValue *= 1.1; // Young players worth more
+  } else if (age > 30) {
+    baseValue *= Math.max(0.6, 1 - (age - 30) * 0.1); // Older players worth less
+  }
+  
+  // Position value adjustment
+  const positionMultipliers = {
+    QB: 2.0,
+    LT: 1.4,
+    RT: 1.3,
+    DE: 1.3,
+    CB: 1.3,
+    WR: 1.2,
+    DT: 1.1,
+    LB: 1.0,
+    S: 0.95,
+    TE: 0.95,
+    RB: 0.85,
+    C: 0.9,
+    LG: 0.85,
+    RG: 0.85,
+    FB: 0.7,
+    K: 0.6,
+    P: 0.6,
+  };
+  
+  baseValue *= positionMultipliers[position] || 1.0;
+  
+  return Math.round(baseValue);
 }
 
 /**

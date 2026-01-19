@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useGame } from '../hooks/useGame';
 import { getTeamById } from '../data/teams';
-import { calculateMarketValue, getCapSpace, calculateTeamSalary } from '../data/freeAgency';
+import { getCapSpace, calculateTeamSalary } from '../data/freeAgency';
+import { calculateMarketValue } from '../utils/contractUtils';
 import ContractModal from '../components/ContractModal';
 
 export default function FreeAgency() {
