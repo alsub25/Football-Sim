@@ -54,7 +54,25 @@ export const GameProvider = ({ children }) => {
   // Save game state to localStorage whenever it changes
   useEffect(() => {
     if (gameState.initialized) {
-      localStorage.setItem('footballSimSave', JSON.stringify(gameState));
+      try {
+        localStorage.setItem('footballSimSave', JSON.stringify(gameState));
+      } catch (error) {
+        console.error('Failed to save game state to localStorage:', error);
+        // If quota exceeded, try to save a minimal version without game results
+        if (error.name === 'QuotaExceededError') {
+          try {
+            const minimalState = {
+              ...gameState,
+              gameResults: gameState.gameResults.slice(-10), // Keep only last 10 games
+            };
+            localStorage.setItem('footballSimSave', JSON.stringify(minimalState));
+            console.log('Saved minimal game state after quota error');
+          } catch (fallbackError) {
+            console.error('Failed to save even minimal state:', fallbackError);
+            alert('Warning: Unable to save game progress. Storage quota exceeded. Game will continue but may not save properly.');
+          }
+        }
+      }
     }
   }, [gameState]);
 
@@ -173,7 +191,11 @@ export const GameProvider = ({ children }) => {
 
       const results = weekGames.map(game => {
         try {
-          return simulateGameDetailed(game, gameState.rosters, gameState.coachingStaffs);
+          const result = simulateGameDetailed(game, gameState.rosters, gameState.coachingStaffs);
+          // Remove detailed play-by-play data to reduce localStorage size
+          // Only keep essential game result information
+          const { playByPlay, playerStats, ...essentialResult } = result;
+          return essentialResult;
         } catch (error) {
           console.error(`Error simulating game ${game.id}:`, error);
           // Return a basic game result on error
@@ -182,8 +204,6 @@ export const GameProvider = ({ children }) => {
             homeScore: 0,
             awayScore: 0,
             played: true,
-            playByPlay: [],
-            playerStats: {},
             error: true
           };
         }
@@ -255,13 +275,18 @@ export const GameProvider = ({ children }) => {
 
       console.log(`Week ${gameState.currentWeek} simulation complete. Moving to week ${nextWeek}`);
 
+      // Keep only recent game results to prevent localStorage quota issues
+      // Store last 50 games (enough for ~3 weeks of history across all teams)
+      const updatedGameResults = [...prev.gameResults, ...results];
+      const recentGameResults = updatedGameResults.slice(-50);
+
       setGameState(prev => ({
         ...prev,
         currentWeek: newPhase === 'playoffs' ? 1 : nextWeek,
         seasonPhase: newPhase,
         standings: newStandings,
         rosters: updatedRosters,
-        gameResults: [...prev.gameResults, ...results],
+        gameResults: recentGameResults,
         playoffBracket,
       }));
     } catch (error) {
