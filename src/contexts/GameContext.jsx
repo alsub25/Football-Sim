@@ -63,7 +63,7 @@ export const GameProvider = ({ children }) => {
           try {
             const minimalState = {
               ...gameState,
-              gameResults: gameState.gameResults.slice(-10), // Keep only last 10 games
+              gameResults: gameState.gameResults.slice(-50), // Keep only last 50 games (same as main limit)
             };
             localStorage.setItem('footballSimSave', JSON.stringify(minimalState));
             console.log('Saved minimal game state after quota error');
@@ -194,7 +194,7 @@ export const GameProvider = ({ children }) => {
           const result = simulateGameDetailed(game, gameState.rosters, gameState.coachingStaffs);
           // Remove detailed play-by-play data to reduce localStorage size
           // Only keep essential game result information
-          // eslint-disable-next-line no-unused-vars
+          // eslint-disable-next-line no-unused-vars -- Intentionally extracting and discarding these properties
           const { playByPlay, playerStats, ...essentialResult } = result;
           return essentialResult;
         } catch (error) {
