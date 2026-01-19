@@ -189,9 +189,26 @@ export const GameProvider = ({ children }) => {
 
       console.log(`Found ${weekGames.length} games for week ${gameState.currentWeek}`);
 
+      const allPlayerStats = {}; // Accumulate player stats from all games this week
+      
       const results = weekGames.map(game => {
         try {
           const result = simulateGameDetailed(game, gameState.rosters, gameState.coachingStaffs);
+          
+          // Accumulate player stats for season tracking
+          if (result.playerStats) {
+            Object.entries(result.playerStats).forEach(([playerId, stats]) => {
+              if (!allPlayerStats[playerId]) {
+                allPlayerStats[playerId] = { ...stats };
+              } else {
+                // Add stats to existing totals
+                Object.keys(stats).forEach(statKey => {
+                  allPlayerStats[playerId][statKey] = (allPlayerStats[playerId][statKey] || 0) + stats[statKey];
+                });
+              }
+            });
+          }
+          
           // Remove detailed play-by-play data to reduce localStorage size
           // Only keep essential game result information
           // eslint-disable-next-line no-unused-vars -- Intentionally extracting and discarding these properties
@@ -282,6 +299,20 @@ export const GameProvider = ({ children }) => {
         const updatedGameResults = [...prev.gameResults, ...results];
         const recentGameResults = updatedGameResults.slice(-50);
 
+        // Update player season stats
+        const updatedPlayerSeasonStats = { ...prev.playerSeasonStats };
+        Object.entries(allPlayerStats).forEach(([playerId, stats]) => {
+          if (!updatedPlayerSeasonStats[playerId]) {
+            updatedPlayerSeasonStats[playerId] = { ...stats, gamesPlayed: 1 };
+          } else {
+            // Add stats to season totals
+            Object.keys(stats).forEach(statKey => {
+              updatedPlayerSeasonStats[playerId][statKey] = (updatedPlayerSeasonStats[playerId][statKey] || 0) + stats[statKey];
+            });
+            updatedPlayerSeasonStats[playerId].gamesPlayed = (updatedPlayerSeasonStats[playerId].gamesPlayed || 0) + 1;
+          }
+        });
+
         return {
           ...prev,
           currentWeek: newPhase === 'playoffs' ? 1 : nextWeek,
@@ -290,6 +321,7 @@ export const GameProvider = ({ children }) => {
           rosters: updatedRosters,
           gameResults: recentGameResults,
           playoffBracket,
+          playerSeasonStats: updatedPlayerSeasonStats,
         };
       });
     } catch (error) {
