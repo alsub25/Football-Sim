@@ -194,6 +194,7 @@ export const GameProvider = ({ children }) => {
           const result = simulateGameDetailed(game, gameState.rosters, gameState.coachingStaffs);
           // Remove detailed play-by-play data to reduce localStorage size
           // Only keep essential game result information
+          // eslint-disable-next-line no-unused-vars
           const { playByPlay, playerStats, ...essentialResult } = result;
           return essentialResult;
         } catch (error) {
@@ -275,20 +276,22 @@ export const GameProvider = ({ children }) => {
 
       console.log(`Week ${gameState.currentWeek} simulation complete. Moving to week ${nextWeek}`);
 
-      // Keep only recent game results to prevent localStorage quota issues
-      // Store last 50 games (enough for ~3 weeks of history across all teams)
-      const updatedGameResults = [...prev.gameResults, ...results];
-      const recentGameResults = updatedGameResults.slice(-50);
+      setGameState(prev => {
+        // Keep only recent game results to prevent localStorage quota issues
+        // Store last 50 games (enough for ~3 weeks of history across all teams)
+        const updatedGameResults = [...prev.gameResults, ...results];
+        const recentGameResults = updatedGameResults.slice(-50);
 
-      setGameState(prev => ({
-        ...prev,
-        currentWeek: newPhase === 'playoffs' ? 1 : nextWeek,
-        seasonPhase: newPhase,
-        standings: newStandings,
-        rosters: updatedRosters,
-        gameResults: recentGameResults,
-        playoffBracket,
-      }));
+        return {
+          ...prev,
+          currentWeek: newPhase === 'playoffs' ? 1 : nextWeek,
+          seasonPhase: newPhase,
+          standings: newStandings,
+          rosters: updatedRosters,
+          gameResults: recentGameResults,
+          playoffBracket,
+        };
+      });
     } catch (error) {
       console.error('Error in advanceRegularSeasonWeek:', error);
       alert(`Error simulating week ${gameState.currentWeek}: ${error.message}. Please try again or start a new career if the issue persists.`);
